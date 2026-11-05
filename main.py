@@ -5,6 +5,8 @@ import json
 import time
 import random
 import os
+import re
+import requests
 from requests.exceptions import RequestException
 from collections import defaultdict
 
@@ -45,15 +47,28 @@ def mask_json_customer_code(data):
 # ======== 推送通知 ========
 
 def send_msg_by_server(send_key, title, content):
-    push_url = f'https://sctapi.ftqq.com/{send_key}.send'
+    # Server酱³：sctp{uid}t{token}
+    if send_key.startswith('sctp'):
+        match = re.match(r'^sctp(\d+)t', send_key)
+        if not match:
+            print("❌ Server酱³ SendKey 格式错误")
+            return None
+        uid = match.group(1)
+        push_url = f'https://{uid}.push.ft07.com/send/{send_key}.send'
+    else:
+        # Server酱 Turbo
+        push_url = f'https://sctapi.ftqq.com/{send_key}.send'
     data = {
         'title': title,
         'desp': content
     }
     try:
-        response = requests.post(push_url, data=data, timeout=15)
+        response = requests.post(push_url, json=data, timeout=15)
         response.raise_for_status()
-        return response.json()
+        result = response.json()
+        if result.get('code') != 0:
+            print(f"❌ 推送失败: {result}")
+        return result
     except RequestException as e:
         print(f"❌ 推送请求异常: {str(e)}")
         return None
