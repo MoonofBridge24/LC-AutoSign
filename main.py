@@ -48,6 +48,7 @@ def mask_json_customer_code(data):
 # ======== 推送通知 ========
 
 def send_msg_by_server(send_key, title, content):
+    content = content.replace('\n', '\n\n')
     # Server酱³：sctp{uid}t{token}
     if send_key.startswith('sctp'):
         match = re.match(r'^sctp(\d+)t', send_key)
